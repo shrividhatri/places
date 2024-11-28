@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Places to Visit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #f4f4f4;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #searchBar {
+            width: 90%;
+            max-width: 400px;
+            padding: 10px;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .grid-item {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            text-align: center;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .grid-item h3 {
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: left;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+        }
+
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .modal-content ul li {
+            margin-bottom: 10px;
+        }
+
+        .close-btn {
+            background: #ff5c5c;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            background: #ff2c2c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <input type="text" id="searchBar" placeholder="Search places..." aria-label="Search places">
+    </header>
+    <div class="grid" id="placesGrid"></div>
+
+    <div class="modal" id="placeModal" role="dialog" aria-labelledby="placeTitle">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">Close</button>
+            <h2 id="placeTitle"></h2>
+            <h3>Distance</h3>
+            <p id="placeDistance"></p>
+            <h3>Purpose</h3>
+            <p id="placePurpose"></p>
+        </div>
+    </div>
+
+    <script>
+        // Places data directly embedded in the file
+        const places = [
+    {
+        "name": "Hussain Sagar Lake",
+        "image": "https://cms.tgtdc.in/fetch?payload=ed5030d9-0bf3-4b86-a4d8-aa555abfb979.jpg",
+        "distance": "20 km",
+        "purpose": "Boat rides and evening strolls."
+    },
+    {
+        "name": "Lumbini Park",
+        "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/17/40/5e/79/path-lumbini-park.jpg?w=1200&h=1200&s=1",
+        "distance": "18 km",
+        "purpose": "Relaxing in nature with a musical fountain."
+    },
+    {
+        "name": "Necklace Road",
+        "image": "https://www.bestbus.in/assets/images/tourist-attractions/necklace-road.jpg",
+        "distance": "18 km",
+        "purpose": "Leisure walk and street food."
+    },
+    {
+        "name": "Charminar",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQEw_F7C1cmwL6zpBAAHFKSCm8NoxVOPbsWwg&s",
+        "distance": "22 km",
+        "purpose": "Explore the historical monument and nearby markets."
+    },
+    {
+        "name": "Salar Jung Museum",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSuknoU2FOpHT1BSy798DLJmfcDLtgqYgBXA&s",
+        "distance": "20 km",
+        "purpose": "Explore art and history with a minimal entry fee."
+    },
+    {
+        "name": "Qutb Shahi Tombs",
+        "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0c/6f/e7/3a/beautiful-design-for.jpg",
+        "distance": "17 km",
+        "purpose": "Visit the tombs and gardens for a historical experience."
+    },
+    {
+        "name": "Ramoji Film City",
+        "image": "https://media.insider.in/image/upload/c_crop,g_custom/v1729835960/mxzakrjybna5roy2qbom.jpg",
+        "distance": "35 km",
+        "purpose": "Budget tours and scenic locations."
+    },
+    {
+        "name": "KBR Park",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRV73p6dYORvdOejIs-nEaGCZYmi4rNGBt0yA&s",
+        "distance": "15 km",
+        "purpose": "Morning walks, jogging, and a relaxing environment."
+    },
+    {
+        "name": "Chilkur Balaji Temple",
+        "image": "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/11/86/b3/ae/adorable-place.jpg",
+        "distance": "30 km",
+        "purpose": "Religious visit and peaceful environment."
+    },
+    {
+        "name": "Shilparamam",
+        "image": "https://i0.wp.com/pikturenama.com/wp-content/uploads/2019/05/with-logo-Shilparamam-Hyderabad-2.jpg",
+        "distance": "22 km",
+        "purpose": "Cultural village offering traditional arts and crafts."
+    },
+    {
+        "name": "Golconda Fort",
+        "image": "https://img.staticmb.com/mbcontent/images/crop/uploads/2022/9/A-mesmerizing-closer-view-inside-Golconda-Fort_0_1200.jpg",
+        "distance": "14 km",
+        "purpose": "Explore historic fort ruins and enjoy the panoramic views."
+    },
+    {
+        "name": "Birla Mandir",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0Yuu766--WqnqFDd_jQBTgpq9C7B6Xb8eIg&s",
+        "distance": "18 km",
+        "purpose": "Visit the serene temple with views of the city."
+    },
+    {
+        "name": "Osman Sagar Lake",
+        "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSA500-cmSgEKRAxl6GyYAOz5MSG_RiZws4Rw&s",
+        "distance": "35 km",
+        "purpose": "Picnics, nature walks, and scenic lake views."
+    },
+    {
+        "name": "Sanghi Temple",
+        "image": "https://imgmedia.lbb.in/media/2020/03/5e6884c4063c34180ddfdc90_1583908036521.jpg",
+        "distance": "45 km",
+        "purpose": "Spiritual visit with a scenic drive."
+    },
+    {
+        "name": "Jalavihar Water Park",
+        "image": "https://jalavihar.in/img/Serene-Landscaping.jpg",
+        "distance": "16 km",
+        "purpose": "Fun water rides and relaxation."
+    },
+    {
+        "name": "Saroornagar Lake",
+        "image": "https://content3.jdmagicbox.com/v2/comp/hyderabad/f7/040pxx40.xx40.141218124030.n4f7/catalogue/saroornagar-lake-saroor-nagar-hyderabad-tourist-attraction-1vgp2xz.jpg",
+        "distance": "17 km",
+        "purpose": "A peaceful lake for a relaxing afternoon."
+    }
+]
+;
+
+        const placesGrid = document.getElementById('placesGrid');
+        const placeModal = document.getElementById('placeModal');
+        const closeModal = document.getElementById('closeModal');
+        const placeTitle = document.getElementById('placeTitle');
+        const placeDistance = document.getElementById('placeDistance');
+        const placePurpose = document.getElementById('placePurpose');
+        const searchBar = document.getElementById('searchBar');
+
+        // Populate the grid with places
+        function populateGrid(places) {
+            placesGrid.innerHTML = '';
+            places.forEach((place, index) => {
+                const gridItem = document.createElement('div');
+                gridItem.classList.add('grid-item');
+                gridItem.setAttribute('tabindex', '0');
+                gridItem.setAttribute('role', 'button');
+                gridItem.setAttribute('aria-label', `Open place: ${place.name}`);
+                gridItem.innerHTML = `
+                    <img src="${place.image}" alt="${place.name}">
+                    <h3>${place.name}</h3>
+                `;
+                gridItem.addEventListener('click', () => displayPlace(index));
+                gridItem.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') displayPlace(index);
+                });
+                placesGrid.appendChild(gridItem);
+            });
+        }
+
+        // Display place details in modal
+        function displayPlace(index) {
+            const place = places[index];
+            placeTitle.textContent = place.name;
+            placeDistance.textContent = place.distance;
+            placePurpose.textContent = place.purpose;
+            placeModal.style.display = 'flex';
+        }
+
+        // Close modal
+        closeModal.addEventListener('click', () => {
+            placeModal.style.display = 'none';
+        });
+
+        // Close modal on clicking outside
+        placeModal.addEventListener('click', (event) => {
+            if (event.target === placeModal) {
+                placeModal.style.display = 'none';
+            }
+        });
+
+        // Filter places based on search
+        searchBar.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filteredPlaces = places.filter(place =>
+                place.name.toLowerCase().includes(query)
+            );
+            populateGrid(query ? filteredPlaces : places);
+        });
+
+        // Initialize the grid with all places
+        populateGrid(places);
+    </script>
+</body>
+</html>
